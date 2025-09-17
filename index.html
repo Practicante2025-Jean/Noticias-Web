@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla de Noticias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .carousel-item {
+            display: none;
+        }
+        .carousel-item.active {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+            width: 80%;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto p-4 sm:p-8 max-w-4xl w-full">
+        <!-- Encabezado de la Sección de Noticias -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold mb-2 text-gray-800 dark:text-white">Noticias del Día</h1>
+            <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400">Desliza para ver más.</p>
+        </header>
+
+        <!-- Contenedor del Carrusel -->
+        <div id="news-carousel" class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mx-auto">
+            <!-- Los artículos del carrusel se insertarán aquí por JavaScript -->
+            <div id="carousel-content"></div>
+
+            <!-- Controles de Navegación -->
+            <div class="absolute inset-y-0 left-0 flex items-center">
+                <button id="prev-btn" class="bg-black bg-opacity-30 text-white p-2 rounded-r-lg hover:bg-opacity-50 transition-all duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center">
+                <button id="next-btn" class="bg-black bg-opacity-30 text-white p-2 rounded-l-lg hover:bg-opacity-50 transition-all duration-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Pie de página o información adicional -->
+        <footer class="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
+            <p>&copy; 2024 Mi Sitio Web. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <!-- Modal para ver los detalles del artículo -->
+    <div id="modal" class="modal">
+        <div id="modal-content" class="modal-content bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg relative max-w-2xl w-full">
+            <button id="close-modal-btn" class="absolute top-2 right-2 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 text-3xl font-bold">&times;</button>
+            <div id="modal-body">
+                <!-- El contenido del modal se insertará aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const newsData = [
+                {
+                    title: 'Exploración Espacial: Un Nuevo Planeta Descubierto',
+                    summary: 'Astrónomos confirman el hallazgo de un exoplaneta con características similares a la Tierra, aumentando las esperanzas de encontrar vida fuera de nuestro sistema solar.',
+                    details: 'Un equipo internacional de astrónomos ha anunciado el descubrimiento de un nuevo exoplaneta, denominado "Kepler-186f", ubicado en la zona habitable de su estrella. Este hallazgo es un paso significativo en la búsqueda de vida más allá de la Tierra, ya que el planeta tiene una superficie rocosa y una atmósfera que podría soportar agua líquida.',
+                    image: 'https://placehold.co/600x400/1E40AF/FFFFFF?text=Espacio'
+                },
+                {
+                    title: 'Impacto de la Inteligencia Artificial en la Educación',
+                    summary: 'Nuevas herramientas de IA están transformando las aulas, ofreciendo experiencias de aprendizaje personalizadas y ayudando a los estudiantes a alcanzar su máximo potencial.',
+                    details: 'La inteligencia artificial está revolucionando el sector educativo a través de plataformas que se adaptan al ritmo de cada estudiante. Estas herramientas no solo evalúan el progreso, sino que también identifican las áreas en las que el alumno necesita más apoyo, proporcionando ejercicios y materiales de estudio a medida. Esto permite a los profesores enfocarse en la interacción humana y el desarrollo de habilidades blandas.',
+                    image: 'https://placehold.co/600x400/065F46/FFFFFF?text=Educación'
+                },
+                {
+                    title: 'La Culinaria del Futuro: Impresoras 3D de Alimentos',
+                    summary: 'Restaurantes de alta gama están experimentando con impresoras 3D para crear platos complejos y sostenibles, reduciendo el desperdicio de alimentos y explorando nuevas texturas.',
+                    details: 'En la vanguardia de la gastronomía, chefs de todo el mundo están utilizando impresoras 3D para "imprimir" alimentos con diseños intrincados. Esta tecnología no solo abre un abanico de posibilidades creativas, sino que también es una solución sostenible. Se pueden utilizar ingredientes en polvo para crear formas y texturas complejas, reduciendo así el desperdicio de alimentos.',
+                    image: 'https://placehold.co/600x400/92400E/FFFFFF?text=Comida'
+                },
+                {
+                    title: 'Deportes Extremos: La Nueva Modalidad del Paraciclismo',
+                    summary: 'Atletas de todo el mundo están adoptando una nueva forma de ciclismo de montaña en la que descienden por terrenos inexplorados, desafiando sus límites físicos y mentales.',
+                    details: 'El paraciclismo de montaña, una disciplina emergente en los deportes extremos, combina la adrenalina del ciclismo con técnicas de paracaidismo. Los atletas, equipados con un paracaídas, se lanzan desde cumbres y descienden por terrenos difíciles. Esta modalidad requiere una gran destreza técnica y un profundo conocimiento de las condiciones del viento y el terreno para garantizar un descenso seguro.',
+                    image: 'https://placehold.co/600x400/7E22CE/FFFFFF?text=Deportes'
+                }
+            ];
+
+            const carouselContent = document.getElementById('carousel-content');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const modal = document.getElementById('modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            let currentArticleIndex = 0;
+
+            // Función para renderizar el artículo actual en el carrusel
+            function renderArticle(index) {
+                // Elimina el contenido anterior
+                carouselContent.innerHTML = '';
+                const article = newsData[index];
+                
+                const articleCard = document.createElement('div');
+                articleCard.className = 'carousel-item active p-6 flex flex-col items-center text-center';
+                
+                articleCard.innerHTML = `
+                    <img src="${article.image}" alt="Imagen de la noticia: ${article.title}" class="w-full rounded-lg shadow-md mb-4 object-cover">
+                    <h3 class="font-bold text-2xl mb-2 text-gray-800 dark:text-white">${article.title}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-base">${article.summary}</p>
+                    <button onclick="showDetails(${index})" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors duration-200">Ver más detalles</button>
+                `;
+                carouselContent.appendChild(articleCard);
+            }
+
+            // Función para mostrar los detalles del artículo en el modal
+            window.showDetails = function(index) {
+                const article = newsData[index];
+                modalBody.innerHTML = `
+                    <img src="${article.image}" alt="Imagen de la noticia: ${article.title}" class="w-full rounded-lg shadow-md mb-4 object-cover">
+                    <h2 class="font-bold text-3xl mb-2 text-gray-800 dark:text-white">${article.title}</h2>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg">${article.details}</p>
+                `;
+                modal.style.display = 'flex';
+            };
+
+            // Función para cerrar el modal
+            closeModalBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            // Cerrar el modal al hacer clic fuera del contenido
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Manejador del botón "Siguiente"
+            nextBtn.addEventListener('click', () => {
+                currentArticleIndex = (currentArticleIndex + 1) % newsData.length;
+                renderArticle(currentArticleIndex);
+            });
+
+            // Manejador del botón "Anterior"
+            prevBtn.addEventListener('click', () => {
+                currentArticleIndex = (currentArticleIndex - 1 + newsData.length) % newsData.length;
+                renderArticle(currentArticleIndex);
+            });
+
+            // Renderizar el primer artículo al cargar la página
+            renderArticle(currentArticleIndex);
+        });
+    </script>
+</body>
+</html>
