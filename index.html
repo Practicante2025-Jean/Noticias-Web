@@ -3,184 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla de Noticias</title>
+    <title>Noticias Ahora</title>
+    <!-- Tailwind CSS CDN para un estilo moderno y responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Estilos generales para el fondo y el texto */
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
         }
-        .carousel-item {
-            display: none;
+
+        /* Paleta de colores vibrante */
+        .header-bg {
+            background-color: #6a1b9a;
+            background-image: linear-gradient(135deg, #6a1b9a 0%, #d81b60 100%);
         }
-        .carousel-item.active {
-            display: block;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
+
+        .card-bg {
             background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
-            position: relative;;
-            animation: fadeIn 0.3s ease-out;
-            width: 80%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+
+        .text-accent {
+            color: #ff9800; /* Naranja */
         }
+        
+        .btn-primary {
+            background-color: #d81b60; /* Rosa vibrante */
+        }
+        
+        .btn-primary:hover {
+            background-color: #c2185b; /* Tono más oscuro al pasar el mouse */
+        }
+
+        .rounded-card {
+            border-radius: 1.5rem; /* Bordes más redondeados */
+        }
+
+        /* Efecto de transición para tarjetas */
+        .card-transition {
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .card-transition:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animación de carga */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6a1b9a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
     </style>
+    <!-- Enlace a la fuente Inter de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex items-center justify-center min-h-screen">
+<body>
 
-    <div class="container mx-auto p-4 sm:p-8 max-w-4xl w-full">
-        <!-- Encabezado de la Sección de Noticias -->
-        <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold mb-2 text-gray-800 dark:text-white">Noticias da</h1>
-            <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400">Desliza para ver más.</p>
-        </header>
-
-        <!-- Contenedor del Carrusel -->
-        <div id="news-carousel" class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mx-auto">
-            <!-- Los artículos del carrusel se insertarán aquí por JavaScript -->
-            <div id="carousel-content"></div>
-
-            <!-- Controles de Navegación -->
-            <div class="absolute inset-y-0 left-0 flex items-center">
-                <button id="prev-btn" class="bg-black bg-opacity-30 text-white p-2 rounded-r-lg hover:bg-opacity-50 transition-all duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                </button>
-            </div>
-            <div class="absolute inset-y-0 right-0 flex items-center">
-                <button id="next-btn" class="bg-black bg-opacity-30 text-white p-2 rounded-l-lg hover:bg-opacity-50 transition-all duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </button>
-            </div>
+    <!-- Nuevo Encabezado Colorido -->
+    <header class="header-bg text-white p-6 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-4xl font-extrabold tracking-tight">
+                Noticias <span class="text-accent">Ahora</span>
+            </h1>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#featured" class="hover:text-gray-200 transition duration-300 font-semibold">Destacada</a>
+                <a href="#articles" class="hover:text-gray-200 transition duration-300 font-semibold">Artículos</a>
+                <a href="#" class="hover:text-gray-200 transition duration-300 font-semibold">Acerca de</a>
+            </nav>
         </div>
+    </header>
 
-        <!-- Pie de página o información adicional -->
-        <footer class="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
-            <p>&copy; 2024 Mi Sitio Web. Todos los derechos reservados.</p>
-        </footer>
-    </div>
-
-    <!-- Modal para ver los detalles del artículo -->
-    <div id="modal" class="modal">
-        <div id="modal-content" class="modal-content bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg relative max-w-2xl w-full">
-            <button id="close-modal-btn" class="absolute top-2 right-2 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 text-3xl font-bold">&times;</button>
-            <div id="modal-body">
-                <!-- El contenido del modal se insertará aquí -->
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- Sección de Noticia Destacada -->
+        <section id="featured" class="my-8">
+            <h2 class="text-3xl font-bold mb-6">Noticia Destacada</h2>
+            <div id="featured-article" class="card-bg rounded-card shadow-lg overflow-hidden md:flex card-transition">
+                <!-- Contenido de la noticia destacada se insertará aquí con JS -->
             </div>
+        </section>
+
+        <!-- Sección de Más Artículos -->
+        <section id="articles" class="my-8">
+            <h2 class="text-3xl font-bold mb-6">Más Artículos</h2>
+            <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Artículos se insertarán aquí con JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Pie de página con un estilo diferente -->
+    <footer class="bg-gray-800 text-gray-300 p-6 text-center">
+        <div class="container mx-auto">
+            <p>&copy; 2025 Noticias Ahora. Hecho con ❤️ y código.</p>
         </div>
-    </div>
+    </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const newsData = [
-                {
-                    title: 'Exploración Espacial: Un Nuevo Planeta Descubierto',
-                    summary: 'Astrónomos confirman el hallazgo de un exoplaneta con características similares a la Tierra, aumentando las esperanzas de encontrar vida fuera de nuestro sistema solar.',
-                    details: 'Un equipo internacional de astrónomos ha anunciado el descubrimiento de un nuevo exoplaneta, denominado "Kepler-186f", ubicado en la zona habitable de su estrella. Este hallazgo es un paso significativo en la búsqueda de vida más allá de la Tierra, ya que el planeta tiene una superficie rocosa y una atmósfera que podría soportar agua líquida.',
-                    image: 'https://placehold.co/600x400/1E40AF/FFFFFF?text=Espacio'
-                },
-                {
-                    title: 'Impacto de la Inteligencia Artificial en la Educación',
-                    summary: 'Nuevas herramientas de IA están transformando las aulas, ofreciendo experiencias de aprendizaje personalizadas y ayudando a los estudiantes a alcanzar su máximo potencial.',
-                    details: 'La inteligencia artificial está revolucionando el sector educativo a través de plataformas que se adaptan al ritmo de cada estudiante. Estas herramientas no solo evalúan el progreso, sino que también identifican las áreas en las que el alumno necesita más apoyo, proporcionando ejercicios y materiales de estudio a medida. Esto permite a los profesores enfocarse en la interacción humana y el desarrollo de habilidades blandas.',
-                    image: 'https://placehold.co/600x400/065F46/FFFFFF?text=Educación'
-                },
-                {
-                    title: 'La Culinaria del Futuro: Impresoras 3D de Alimentos',
-                    summary: 'Restaurantes de alta gama están experimentando con impresoras 3D para crear platos complejos y sostenibles, reduciendo el desperdicio de alimentos y explorando nuevas texturas.',
-                    details: 'En la vanguardia de la gastronomía, chefs de todo el mundo están utilizando impresoras 3D para "imprimir" alimentos con diseños intrincados. Esta tecnología no solo abre un abanico de posibilidades creativas, sino que también es una solución sostenible. Se pueden utilizar ingredientes en polvo para crear formas y texturas complejas, reduciendo así el desperdicio de alimentos.',
-                    image: 'https://placehold.co/600x400/92400E/FFFFFF?text=Comida'
-                },
-                {
-                    title: 'Deportes Extremos: La Nueva Modalidad del Paraciclismo',
-                    summary: 'Atletas de todo el mundo están adoptando una nueva forma de ciclismo de montaña en la que descienden por terrenos inexplorados, desafiando sus límites físicos y mentales.',
-                    details: 'El paraciclismo de montaña, una disciplina emergente en los deportes extremos, combina la adrenalina del ciclismo con técnicas de paracaidismo. Los atletas, equipados con un paracaídas, se lanzan desde cumbres y descienden por terrenos difíciles. Esta modalidad requiere una gran destreza técnica y un profundo conocimiento de las condiciones del viento y el terreno para garantizar un descenso seguro.',
-                    image: 'https://placehold.co/600x400/7E22CE/FFFFFF?text=Deportes'
+        // Función para obtener las noticias de la API
+        async function obtenerNoticias() {
+            try {
+                const randomOffset = Math.floor(Math.random() * 100);
+                const apiKey = '68e53d1dcc214d34ad4db52229ec9fab';
+                const url = `https://api.worldnewsapi.com/search-news?api-key=${apiKey}&text=&language=es&number=10&offset=${randomOffset}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Error al obtener las noticias');
                 }
-            ];
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return { news: [] };
+            }
+        }
 
-            const carouselContent = document.getElementById('carousel-content');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const modal = document.getElementById('modal');
-            const modalBody = document.getElementById('modal-body');
-            const closeModalBtn = document.getElementById('close-modal-btn');
-            let currentArticleIndex = 0;
+        // Función para mostrar las noticias en la página
+        function mostrarNoticias(noticias) {
+            const featuredArticleContainer = document.getElementById('featured-article');
+            const articlesGridContainer = document.getElementById('articles-grid');
 
-            // Función para renderizar el artículo actual en el carrusel
-            function renderArticle(index) {
-                // Elimina el contenido anterior
-                carouselContent.innerHTML = '';
-                const article = newsData[index];
-                
-                const articleCard = document.createElement('div');
-                articleCard.className = 'carousel-item active p-6 flex flex-col items-center text-center';
-                
-                articleCard.innerHTML = `
-                    <img src="${article.image}" alt="Imagen de la noticia: ${article.title}" class="w-full rounded-lg shadow-md mb-4 object-cover">
-                    <h3 class="font-bold text-2xl mb-2 text-gray-800 dark:text-white">${article.title}</h3>
-                    <p class="text-gray-600 dark:text-gray-400 text-base">${article.summary}</p>
-                    <button onclick="showDetails(${index})" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium transition-colors duration-200">Ver más detalles</button>
-                `;
-                carouselContent.appendChild(articleCard);
+            if (!noticias || !noticias.news || noticias.news.length === 0) {
+                featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-gray-500">No se encontraron noticias.</p>';
+                articlesGridContainer.innerHTML = '';
+                return;
             }
 
-            // Función para mostrar los detalles del artículo en el modal
-            window.showDetails = function(index) {
-                const article = newsData[index];
-                modalBody.innerHTML = `
-                    <img src="${article.image}" alt="Imagen de la noticia: ${article.title}" class="w-full rounded-lg shadow-md mb-4 object-cover">
-                    <h2 class="font-bold text-3xl mb-2 text-gray-800 dark:text-white">${article.title}</h2>
-                    <p class="text-gray-600 dark:text-gray-400 text-lg">${article.details}</p>
+            // Mostrar noticia destacada
+            const featuredArticle = noticias.news[0];
+            featuredArticleContainer.innerHTML = `
+                <div class="md:w-1/2">
+                    <img src="${featuredArticle.image}" alt="${featuredArticle.title}" onerror="this.onerror=null;this.src='https://placehold.co/800x600/6a1b9a/ffffff?text=Imagen+No+Disponible';" class="w-full h-full object-cover rounded-t-card md:rounded-l-card md:rounded-tr-none">
+                </div>
+                <div class="p-6 flex flex-col justify-center md:w-1/2">
+                    <span class="text-sm font-semibold text-accent uppercase mb-2">${featuredArticle.source_country}</span>
+                    <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.title}</h3>
+                    <p class="text-gray-700 text-lg mb-6">${featuredArticle.summary}</p>
+                    <a href="${featuredArticle.url}" target="_blank" rel="noopener noreferrer" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">
+                        Leer Artículo Completo
+                    </a>
+                </div>
+            `;
+
+            // Mostrar el resto de las noticias
+            articlesGridContainer.innerHTML = '';
+            noticias.news.slice(1).forEach(article => {
+                const articleCard = document.createElement('div');
+                articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
+                
+                articleCard.innerHTML = `
+                    <img src="${article.image}" alt="${article.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/6a1b9a/ffffff?text=Imagen+No+Disponible';" class="w-full h-48 object-cover">
+                    <div class="p-5">
+                        <span class="text-xs font-semibold text-accent uppercase mb-1">${article.source_country}</span>
+                        <h4 class="text-xl font-bold mt-2 leading-tight">${article.title}</h4>
+                        <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.summary}</p>
+                        <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">
+                            Leer más &rarr;
+                        </a>
+                    </div>
                 `;
-                modal.style.display = 'flex';
-            };
-
-            // Función para cerrar el modal
-            closeModalBtn.addEventListener('click', () => {
-                modal.style.display = 'none';
+                articlesGridContainer.appendChild(articleCard);
             });
+        }
 
-            // Cerrar el modal al hacer clic fuera del contenido
-            window.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
+        // Cargar noticias al cargar la página
+        window.onload = async function() {
+            const featuredArticleContainer = document.getElementById('featured-article');
+            const articlesGridContainer = document.getElementById('articles-grid');
 
-            // Manejador del botón "Siguiente"
-            nextBtn.addEventListener('click', () => {
-                currentArticleIndex = (currentArticleIndex + 1) % newsData.length;
-                renderArticle(currentArticleIndex);
-            });
+            // Mostrar indicador de carga
+            featuredArticleContainer.innerHTML = '<div class="p-6 text-center"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600">Cargando noticias...</p></div>';
+            articlesGridContainer.innerHTML = '';
 
-            // Manejador del botón "Anterior"
-            prevBtn.addEventListener('click', () => {
-                currentArticleIndex = (currentArticleIndex - 1 + newsData.length) % newsData.length;
-                renderArticle(currentArticleIndex);
-            });
-
-            // Renderizar el primer artículo al cargar la página
-            renderArticle(currentArticleIndex);
-        });
+            try {
+                const noticias = await obtenerNoticias();
+                mostrarNoticias(noticias);
+            } catch (error) {
+                console.error('Error al cargar las noticias:', error);
+                featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-red-500">Error al cargar las noticias. Por favor, intenta recargar la página.</p>';
+            }
+        };
     </script>
 </body>
 </html>
