@@ -118,7 +118,7 @@
             try {
                 const randomOffset = Math.floor(Math.random() * 100);
                 const apiKey = '68e53d1dcc214d34ad4db52229ec9fab';
-                const url = `https://api.worldnewsapi.com/search-news?api-key=${apiKey}&text=&language=es&number=10&offset=${randomOffset}`;
+                const url = `https://celvir.app.n8n.cloud/webhook/noticia?api-key=68e53d1dcc214d34ad4db52229ec9fab&text=&language=es&number=10&offset=${randomOffset}`;
                 
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -136,23 +136,30 @@
             const featuredArticleContainer = document.getElementById('featured-article');
             const articlesGridContainer = document.getElementById('articles-grid');
 
-            if (!noticias || !noticias.news || noticias.news.length === 0) {
+            let lista = Array.isArray(noticias) ? noticias : noticias.news;
+            if (!lista || lista.length === 0) {
                 featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-gray-500">No se encontraron noticias.</p>';
                 articlesGridContainer.innerHTML = '';
                 return;
             }
 
+            // Seleccionar 10 noticias aleatorias
+            let seleccionadas = [];
+            let copia = [...lista];
+            for (let i = 0; i < Math.min(10, copia.length); i++) {
+                const idx = Math.floor(Math.random() * copia.length);
+                seleccionadas.push(copia[idx]);
+                copia.splice(idx, 1);
+            }
+
             // Mostrar noticia destacada
-            const featuredArticle = noticias.news[0];
+            const featuredArticle = seleccionadas[0];
             featuredArticleContainer.innerHTML = `
-                <div class="md:w-1/2">
-                    <img src="${featuredArticle.image}" alt="${featuredArticle.title}" onerror="this.onerror=null;this.src='https://placehold.co/800x600/6a1b9a/ffffff?text=Imagen+No+Disponible';" class="w-full h-full object-cover rounded-t-card md:rounded-l-card md:rounded-tr-none">
-                </div>
-                <div class="p-6 flex flex-col justify-center md:w-1/2">
-                    <span class="text-sm font-semibold text-accent uppercase mb-2">${featuredArticle.source_country}</span>
-                    <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.title}</h3>
-                    <p class="text-gray-700 text-lg mb-6">${featuredArticle.summary}</p>
-                    <a href="${featuredArticle.url}" target="_blank" rel="noopener noreferrer" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">
+                <div class="p-6 flex flex-col justify-center">
+                    <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.titulo || ''}</h3>
+                    <p class="text-gray-700 text-lg mb-2">${featuredArticle.descripcion || ''}</p>
+                    <p class="text-gray-500 text-base mb-4">${featuredArticle.resumen || ''}</p>
+                    <a href="${featuredArticle.urlSitio || '#'}" target="_blank" rel="noopener noreferrer" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">
                         Leer Artículo Completo
                     </a>
                 </div>
@@ -160,17 +167,15 @@
 
             // Mostrar el resto de las noticias
             articlesGridContainer.innerHTML = '';
-            noticias.news.slice(1).forEach(article => {
+            seleccionadas.slice(1).forEach(article => {
                 const articleCard = document.createElement('div');
                 articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
-                
                 articleCard.innerHTML = `
-                    <img src="${article.image}" alt="${article.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/6a1b9a/ffffff?text=Imagen+No+Disponible';" class="w-full h-48 object-cover">
                     <div class="p-5">
-                        <span class="text-xs font-semibold text-accent uppercase mb-1">${article.source_country}</span>
-                        <h4 class="text-xl font-bold mt-2 leading-tight">${article.title}</h4>
-                        <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.summary}</p>
-                        <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">
+                        <h4 class="text-xl font-bold mt-2 leading-tight">${article.titulo || ''}</h4>
+                        <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.descripcion || ''}</p>
+                        <p class="text-xs text-gray-500 mt-1">${article.resumen || ''}</p>
+                        <a href="${article.urlSitio || '#'}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">
                             Leer más &rarr;
                         </a>
                     </div>
