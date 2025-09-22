@@ -1,0 +1,7 @@
+¿QUE ES NETLIFY?
+Bueno q Entendi de Netlify,Bueno Netlify es una pagina de internet q ayuda a subir y publicar
+sitios web  sin la necesidad de saber mucho de los servidores. Nosotros los ususarios nos conectamos 
+al Github para hacer o publicar Nuestro Proyecto y otros repositorios y cada vez q hacemos un cambios github lo decteta
+y asi podamos hacer cambios y publicar las pagina para q puede actualizarse sola. y para q sirve bueno en pocas alabras q 
+vi es netlify sirve para q los desarrolladores y estudiantes pongas sus paginas en internet de manera rapida,seguray sin 
+complicaciones. 
