@@ -1,83 +1,111 @@
-<script>
-async function obtenerNoticias() {
-    try {
-        // siempre consume tu API directo
-        const url = `https://jeanbhnz.app.n8n.cloud/webhook/noticia?api-key=242365f00faf4d9fb0fb3b2bee8d23d6&text=&language=es&number=10`;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noticias Impactantes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+    .hero-section {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('https://placehold.co/1920x600/1e3a8a/e0e7ff?text=NOTICIAS+DESTACADAS');
+      background-size: cover;
+      background-position: center;
+    }
+    .card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
 
+  <!-- Header -->
+  <header class="bg-white shadow-lg">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="#" class="text-3xl font-bold text-gray-900">
+        <span class="text-blue-600">Impacto</span>News
+      </a>
+      <button id="reloadBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-md">
+        Reiniciar Noticias
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section text-center text-white py-24">
+    <h1 class="text-5xl md:text-6xl font-extrabold leading-tight">Las noticias que te impactan</h1>
+    <p class="mt-4 text-xl md:text-2xl font-light">Mantente informado con lo último del mundo.</p>
+  </section>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-12">
+    <h2 class="text-4xl font-bold text-gray-900 mb-8 text-center">Últimas Noticias</h2>
+    <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
+    <div class="container mx-auto px-6 text-center">
+      <p>&copy; 2024 ImpactoNews. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Script -->
+  <script>
+    async function obtenerNoticias() {
+      try {
+        const randomOffset = Math.floor(Math.random() * 50); // para variar resultados
+        const url = `https://jeanbhnz.app.n8n.cloud/webhook/noticia?number=10&offset=${randomOffset}`;
         const response = await fetch(url, { cache: "no-store" });
-        if (!response.ok) throw new Error('Error al obtener noticias');
+        if (!response.ok) throw new Error("Error al obtener noticias");
         return await response.json();
-    } catch (err) {
+      } catch (err) {
         console.error(err);
         return { news: [] };
+      }
     }
-}
 
-function mostrarNoticias(noticias) {
-    const featuredArticleContainer = document.getElementById('featured-article');
-    const articlesGridContainer = document.getElementById('articles-grid');
+    function mostrarNoticias(noticias) {
+      const articlesGrid = document.getElementById("articles-grid");
+      articlesGrid.innerHTML = "";
 
-    let lista = Array.isArray(noticias) ? noticias : noticias.news;
-    if (!lista || lista.length === 0) {
-        featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-gray-500">No se encontraron noticias.</p>';
-        articlesGridContainer.innerHTML = '';
+      let lista = Array.isArray(noticias) ? noticias : noticias.news;
+      if (!lista || lista.length === 0) {
+        articlesGrid.innerHTML = '<p class="text-center text-gray-500 col-span-3">No se encontraron noticias.</p>';
         return;
-    }
+      }
 
-    // tomar la primera noticia destacada
-    const featuredArticle = lista[0];
-    // si no trae fecha la API, usamos la fecha actual
-    const fechaFeatured = featuredArticle.fecha 
-        ? new Date(featuredArticle.fecha).toLocaleString('es-ES') 
-        : new Date().toLocaleString('es-ES');
+      lista.forEach(article => {
+        const fecha = article.fecha
+          ? new Date(article.fecha).toLocaleString("es-ES")
+          : new Date().toLocaleString("es-ES");
 
-    featuredArticleContainer.innerHTML = `
-        <div class="p-6 flex flex-col justify-center">
-            ${featuredArticle.imagen ? `<img src="${featuredArticle.imagen}" alt="${featuredArticle.titulo}" class="w-full h-auto mb-4 rounded-lg object-cover">` : ''}
-            <h3 class="text-3xl font-bold leading-tight mb-2">${featuredArticle.titulo || ''}</h3>
-            <p class="text-gray-500 text-sm mb-2">📅 Publicado: ${fechaFeatured}</p>
-            <p class="text-gray-700 text-lg mb-2">${featuredArticle.descripcion || ''}</p>
-            <p class="text-gray-500 text-base mb-4">${featuredArticle.resumen || ''}</p>
-            <a href="${featuredArticle.urlSitio || '#'}" target="_blank" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">Leer Artículo Completo</a>
-        </div>
-    `;
+        const card = document.createElement("div");
+        card.className = "card bg-white rounded-xl shadow-lg overflow-hidden";
 
-    // otras noticias
-    articlesGridContainer.innerHTML = '';
-    lista.slice(1).forEach(article => {
-        const fechaArticle = article.fecha 
-            ? new Date(article.fecha).toLocaleString('es-ES') 
-            : new Date().toLocaleString('es-ES');
-
-        const articleCard = document.createElement('div');
-        articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
-        articleCard.innerHTML = `
-            ${article.imagen ? `<img src="${article.imagen}" alt="${article.titulo}" class="w-full h-48 object-cover">` : ''}
-            <div class="p-5">
-                <h4 class="text-xl font-bold mt-2 leading-tight">${article.titulo || ''}</h4>
-                <p class="text-gray-500 text-xs mb-2">📅 Publicado: ${fechaArticle}</p>
-                <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.descripcion || ''}</p>
-                <p class="text-xs text-gray-500 mt-1">${article.resumen || ''}</p>
-                <a href="${article.urlSitio || '#'}" target="_blank" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">Leer más &rarr;</a>
-            </div>
+        card.innerHTML = `
+          ${article.imagen ? `<img src="${article.imagen}" alt="${article.titulo}" class="w-full h-48 object-cover">` : ""}
+          <div class="p-6">
+            <span class="bg-blue-200 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 inline-block">📅 ${fecha}</span>
+            <h3 class="text-2xl font-bold text-gray-900 leading-snug mt-2">${article.titulo || ""}</h3>
+            <p class="text-gray-600 mt-4">${article.descripcion || ""}</p>
+            <a href="${article.urlSitio || "#"}" target="_blank" class="mt-4 inline-block text-blue-600 hover:text-blue-800 font-semibold">Leer artículo completo &rarr;</a>
+          </div>
         `;
-        articlesGridContainer.appendChild(articleCard);
-    });
-}
-
-async function cargarNoticias() {
-    const featuredArticleContainer = document.getElementById('featured-article');
-    const articlesGridContainer = document.getElementById('articles-grid');
-    featuredArticleContainer.innerHTML = '<div class="p-6 text-center"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600">Cargando noticias...</p></div>';
-    articlesGridContainer.innerHTML = '';
-    try {
-        const noticias = await obtenerNoticias();
-        mostrarNoticias(noticias);
-    } catch (err) {
-        featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-red-500">Error al cargar noticias.</p>';
+        articlesGrid.appendChild(card);
+      });
     }
-}
 
-window.onload = cargarNoticias;
-document.getElementById('reloadBtn').addEventListener('click', cargarNoticias);
-</script>
+    async function cargarNoticias() {
+      const grid = document.getElementById("articles-grid");
+      grid.innerHTML = '<p class="col-span-3 text-center text-gray-500">Cargando noticias...</p>';
+      const noticias = await obtenerNoticias();
+      mostrarNoticias(noticias);
+    }
+
+    window.onload = cargarNoticias;
+    document.getElementById("reloadBtn").addEventListener("click", cargarNoticias);
+  </script>
+</body>
+</html>
