@@ -1,60 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Noticias Ahora</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; color: #333; }
-.header-bg { background-color: #6a1b9a; background-image: linear-gradient(135deg, #6a1b9a 0%, #d81b60 100%); }
-.card-bg { background-color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1),0 1px 3px rgba(0,0,0,0.08); }
-.text-accent { color: #ff9800; }
-.btn-primary { background-color: #d81b60; }
-.btn-primary:hover { background-color: #c2185b; }
-.rounded-card { border-radius: 1.5rem; }
-.card-transition { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
-.card-transition:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.15),0 4px 6px rgba(0,0,0,0.1); }
-.loader { border: 4px solid #f3f3f3; border-top: 4px solid #6a1b9a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-<header class="header-bg text-white p-6 shadow-xl sticky top-0 z-50">
-<div class="container mx-auto flex justify-between items-center">
-<h1 class="text-4xl font-extrabold tracking-tight">Noticias <span class="text-accent">Ahora</span></h1>
-</div>
-</header>
-
-<main class="container mx-auto p-4 md:p-8">
-<section id="featured" class="my-8">
-<h2 class="text-3xl font-bold mb-6">Noticia Destacada</h2>
-<div id="featured-article" class="card-bg rounded-card shadow-lg overflow-hidden md:flex card-transition"></div>
-</section>
-
-<section class="flex justify-end mb-4">
-<button id="reloadBtn" class="py-2 px-6 btn-primary text-white rounded-full hover:scale-105 transition-transform duration-300">Reiniciar Noticias</button>
-</section>
-
-<section id="articles" class="my-8">
-<h2 class="text-3xl font-bold mb-6">Más Artículos</h2>
-<div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-</section>
-</main>
-
-<footer class="bg-gray-800 text-gray-300 p-6 text-center">
-<div class="container mx-auto">
-<p>&copy; 2025 Noticias Ahora. Hecho con ❤️ y código.</p>
-</div>
-</footer>
-
 <script>
 async function obtenerNoticias() {
     try {
-        const url = `https://jeanbhnz.app.n8n.cloud/webhook/noticia?api-key=242365f00faf4d9fb0fb3b2bee8d23d6&text=&language=es&number=20`;
+        // siempre consume tu API directo
+        const url = `https://jeanbhnz.app.n8n.cloud/webhook/noticia?api-key=242365f00faf4d9fb0fb3b2bee8d23d6&text=&language=es&number=10`;
+
         const response = await fetch(url, { cache: "no-store" });
         if (!response.ok) throw new Error('Error al obtener noticias');
         return await response.json();
@@ -75,28 +24,38 @@ function mostrarNoticias(noticias) {
         return;
     }
 
-    // Mezclar y seleccionar 10 noticias distintas
-    lista = lista.sort(() => Math.random() - 0.5).slice(0, 10);
-
+    // tomar la primera noticia destacada
     const featuredArticle = lista[0];
+    // si no trae fecha la API, usamos la fecha actual
+    const fechaFeatured = featuredArticle.fecha 
+        ? new Date(featuredArticle.fecha).toLocaleString('es-ES') 
+        : new Date().toLocaleString('es-ES');
+
     featuredArticleContainer.innerHTML = `
         <div class="p-6 flex flex-col justify-center">
             ${featuredArticle.imagen ? `<img src="${featuredArticle.imagen}" alt="${featuredArticle.titulo}" class="w-full h-auto mb-4 rounded-lg object-cover">` : ''}
-            <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.titulo || ''}</h3>
+            <h3 class="text-3xl font-bold leading-tight mb-2">${featuredArticle.titulo || ''}</h3>
+            <p class="text-gray-500 text-sm mb-2">📅 Publicado: ${fechaFeatured}</p>
             <p class="text-gray-700 text-lg mb-2">${featuredArticle.descripcion || ''}</p>
             <p class="text-gray-500 text-base mb-4">${featuredArticle.resumen || ''}</p>
             <a href="${featuredArticle.urlSitio || '#'}" target="_blank" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">Leer Artículo Completo</a>
         </div>
     `;
 
+    // otras noticias
     articlesGridContainer.innerHTML = '';
     lista.slice(1).forEach(article => {
+        const fechaArticle = article.fecha 
+            ? new Date(article.fecha).toLocaleString('es-ES') 
+            : new Date().toLocaleString('es-ES');
+
         const articleCard = document.createElement('div');
         articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
         articleCard.innerHTML = `
             ${article.imagen ? `<img src="${article.imagen}" alt="${article.titulo}" class="w-full h-48 object-cover">` : ''}
             <div class="p-5">
                 <h4 class="text-xl font-bold mt-2 leading-tight">${article.titulo || ''}</h4>
+                <p class="text-gray-500 text-xs mb-2">📅 Publicado: ${fechaArticle}</p>
                 <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.descripcion || ''}</p>
                 <p class="text-xs text-gray-500 mt-1">${article.resumen || ''}</p>
                 <a href="${article.urlSitio || '#'}" target="_blank" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">Leer más &rarr;</a>
@@ -122,5 +81,3 @@ async function cargarNoticias() {
 window.onload = cargarNoticias;
 document.getElementById('reloadBtn').addEventListener('click', cargarNoticias);
 </script>
-</body>
-</html>
