@@ -1,206 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noticias Ahora</title>
-    <!-- Tailwind CSS CDN para un estilo moderno y responsivo -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Estilos generales para el fondo y el texto */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
-            color: #333;
-        }
-
-        /* Paleta de colores vibrante */
-        .header-bg {
-            background-color: #6a1b9a;
-            background-image: linear-gradient(135deg, #6a1b9a 0%, #d81b60 100%);
-        }
-
-        .card-bg {
-            background-color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .text-accent {
-            color: #ff9800; /* Naranja */
-        }
-        
-        .btn-primary {
-            background-color: #d81b60; /* Rosa vibrante */
-        }
-        
-        .btn-primary:hover {
-            background-color: #c2185b; /* Tono más oscuro al pasar el mouse */
-        }
-
-        .rounded-card {
-            border-radius: 1.5rem; /* Bordes más redondeados */
-        }
-
-        /* Efecto de transición para tarjetas */
-        .card-transition {
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-        }
-        .card-transition:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Animación de carga */
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #6a1b9a;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-    </style>
-    <!-- Enlace a la fuente Inter de Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noticias Ahora</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; color: #333; }
+.header-bg { background-color: #6a1b9a; background-image: linear-gradient(135deg, #6a1b9a 0%, #d81b60 100%); }
+.card-bg { background-color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1),0 1px 3px rgba(0,0,0,0.08); }
+.text-accent { color: #ff9800; }
+.btn-primary { background-color: #d81b60; }
+.btn-primary:hover { background-color: #c2185b; }
+.rounded-card { border-radius: 1.5rem; }
+.card-transition { transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; }
+.card-transition:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.15),0 4px 6px rgba(0,0,0,0.1); }
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid #6a1b9a; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+<header class="header-bg text-white p-6 shadow-xl sticky top-0 z-50">
+<div class="container mx-auto flex justify-between items-center">
+<h1 class="text-4xl font-extrabold tracking-tight">Noticias <span class="text-accent">Ahora</span></h1>
+</div>
+</header>
 
-    <!-- Nuevo Encabezado Colorido -->
-    <header class="header-bg text-white p-6 shadow-xl sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-4xl font-extrabold tracking-tight">
-                Noticias <span class="text-accent">Ahora</span>
-            </h1>
-            <nav class="hidden md:flex space-x-6">
-                <a href="#featured" class="hover:text-gray-200 transition duration-300 font-semibold">Destacada</a>
-                <a href="#articles" class="hover:text-gray-200 transition duration-300 font-semibold">Artículos</a>
-                <a href="#" class="hover:text-gray-200 transition duration-300 font-semibold">Acerca de</a>
-            </nav>
+<main class="container mx-auto p-4 md:p-8">
+<section id="featured" class="my-8">
+<h2 class="text-3xl font-bold mb-6">Noticia Destacada</h2>
+<div id="featured-article" class="card-bg rounded-card shadow-lg overflow-hidden md:flex card-transition"></div>
+</section>
+
+<section class="flex justify-end mb-4">
+<button id="reloadBtn" class="py-2 px-6 btn-primary text-white rounded-full hover:scale-105 transition-transform duration-300">Reiniciar Noticias</button>
+</section>
+
+<section id="articles" class="my-8">
+<h2 class="text-3xl font-bold mb-6">Más Artículos</h2>
+<div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+</section>
+</main>
+
+<footer class="bg-gray-800 text-gray-300 p-6 text-center">
+<div class="container mx-auto">
+<p>&copy; 2025 Noticias Ahora. Hecho con ❤️ y código.</p>
+</div>
+</footer>
+
+<script>
+async function obtenerNoticias() {
+    try {
+        const url = `https://jeanbhnz.app.n8n.cloud/webhook/noticia?api-key=242365f00faf4d9fb0fb3b2bee8d23d6&text=&language=es&number=20`;
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error('Error al obtener noticias');
+        return await response.json();
+    } catch (err) {
+        console.error(err);
+        return { news: [] };
+    }
+}
+
+function mostrarNoticias(noticias) {
+    const featuredArticleContainer = document.getElementById('featured-article');
+    const articlesGridContainer = document.getElementById('articles-grid');
+
+    let lista = Array.isArray(noticias) ? noticias : noticias.news;
+    if (!lista || lista.length === 0) {
+        featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-gray-500">No se encontraron noticias.</p>';
+        articlesGridContainer.innerHTML = '';
+        return;
+    }
+
+    // Mezclar y seleccionar 10 noticias distintas
+    lista = lista.sort(() => Math.random() - 0.5).slice(0, 10);
+
+    const featuredArticle = lista[0];
+    featuredArticleContainer.innerHTML = `
+        <div class="p-6 flex flex-col justify-center">
+            ${featuredArticle.imagen ? `<img src="${featuredArticle.imagen}" alt="${featuredArticle.titulo}" class="w-full h-auto mb-4 rounded-lg object-cover">` : ''}
+            <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.titulo || ''}</h3>
+            <p class="text-gray-700 text-lg mb-2">${featuredArticle.descripcion || ''}</p>
+            <p class="text-gray-500 text-base mb-4">${featuredArticle.resumen || ''}</p>
+            <a href="${featuredArticle.urlSitio || '#'}" target="_blank" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">Leer Artículo Completo</a>
         </div>
-    </header>
+    `;
 
-    <main class="container mx-auto p-4 md:p-8">
-        <!-- Sección de Noticia Destacada -->
-        <section id="featured" class="my-8">
-            <h2 class="text-3xl font-bold mb-6">Noticia Destacada</h2>
-            <div id="featured-article" class="card-bg rounded-card shadow-lg overflow-hidden md:flex card-transition">
-                <!-- Contenido de la noticia destacada se insertará aquí con JS -->
+    articlesGridContainer.innerHTML = '';
+    lista.slice(1).forEach(article => {
+        const articleCard = document.createElement('div');
+        articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
+        articleCard.innerHTML = `
+            ${article.imagen ? `<img src="${article.imagen}" alt="${article.titulo}" class="w-full h-48 object-cover">` : ''}
+            <div class="p-5">
+                <h4 class="text-xl font-bold mt-2 leading-tight">${article.titulo || ''}</h4>
+                <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.descripcion || ''}</p>
+                <p class="text-xs text-gray-500 mt-1">${article.resumen || ''}</p>
+                <a href="${article.urlSitio || '#'}" target="_blank" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">Leer más &rarr;</a>
             </div>
-        </section>
+        `;
+        articlesGridContainer.appendChild(articleCard);
+    });
+}
 
-        <!-- Sección de Más Artículos -->
-        <section id="articles" class="my-8">
-            <h2 class="text-3xl font-bold mb-6">Más Artículos</h2>
-            <div id="articles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Artículos se insertarán aquí con JS -->
-            </div>
-        </section>
-    </main>
+async function cargarNoticias() {
+    const featuredArticleContainer = document.getElementById('featured-article');
+    const articlesGridContainer = document.getElementById('articles-grid');
+    featuredArticleContainer.innerHTML = '<div class="p-6 text-center"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600">Cargando noticias...</p></div>';
+    articlesGridContainer.innerHTML = '';
+    try {
+        const noticias = await obtenerNoticias();
+        mostrarNoticias(noticias);
+    } catch (err) {
+        featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-red-500">Error al cargar noticias.</p>';
+    }
+}
 
-    <!-- Pie de página con un estilo diferente -->
-    <footer class="bg-gray-800 text-gray-300 p-6 text-center">
-        <div class="container mx-auto">
-            <p>&copy; 2025 Noticias Ahora. Hecho con ❤️ y código.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Función para obtener las noticias de la API
-        async function obtenerNoticias() {
-            try {
-                const randomOffset = Math.floor(Math.random() * 100);
-                const apiKey = '68e53d1dcc214d34ad4db52229ec9fab';
-                const url = `https://celvir.app.n8n.cloud/webhook/noticia?api-key=68e53d1dcc214d34ad4db52229ec9fab&text=&language=es&number=10&offset=${randomOffset}`;
-                
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error('Error al obtener las noticias');
-                }
-                return await response.json();
-            } catch (error) {
-                console.error('Error:', error);
-                return { news: [] };
-            }
-        }
-
-        // Función para mostrar las noticias en la página
-        function mostrarNoticias(noticias) {
-            const featuredArticleContainer = document.getElementById('featured-article');
-            const articlesGridContainer = document.getElementById('articles-grid');
-
-            let lista = Array.isArray(noticias) ? noticias : noticias.news;
-            if (!lista || lista.length === 0) {
-                featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-gray-500">No se encontraron noticias.</p>';
-                articlesGridContainer.innerHTML = '';
-                return;
-            }
-
-            // Seleccionar 10 noticias aleatorias
-            let seleccionadas = [];
-            let copia = [...lista];
-            for (let i = 0; i < Math.min(10, copia.length); i++) {
-                const idx = Math.floor(Math.random() * copia.length);
-                seleccionadas.push(copia[idx]);
-                copia.splice(idx, 1);
-            }
-
-            // Mostrar noticia destacada
-            const featuredArticle = seleccionadas[0];
-            featuredArticleContainer.innerHTML = `
-                <div class="p-6 flex flex-col justify-center">
-                    <h3 class="text-3xl font-bold leading-tight mb-4">${featuredArticle.titulo || ''}</h3>
-                    <p class="text-gray-700 text-lg mb-2">${featuredArticle.descripcion || ''}</p>
-                    <p class="text-gray-500 text-base mb-4">${featuredArticle.resumen || ''}</p>
-                    <a href="${featuredArticle.urlSitio || '#'}" target="_blank" rel="noopener noreferrer" class="self-start inline-block py-3 px-8 text-white font-bold rounded-full btn-primary hover:scale-105 transition-transform duration-300">
-                        Leer Artículo Completo
-                    </a>
-                </div>
-            `;
-
-            // Mostrar el resto de las noticias
-            articlesGridContainer.innerHTML = '';
-            seleccionadas.slice(1).forEach(article => {
-                const articleCard = document.createElement('div');
-                articleCard.className = 'card-bg rounded-card shadow-md overflow-hidden card-transition';
-                articleCard.innerHTML = `
-                    <div class="p-5">
-                        <h4 class="text-xl font-bold mt-2 leading-tight">${article.titulo || ''}</h4>
-                        <p class="text-sm text-gray-600 mt-2 line-clamp-3">${article.descripcion || ''}</p>
-                        <p class="text-xs text-gray-500 mt-1">${article.resumen || ''}</p>
-                        <a href="${article.urlSitio || '#'}" target="_blank" rel="noopener noreferrer" class="mt-4 inline-block text-d81b60 font-semibold hover:underline">
-                            Leer más &rarr;
-                        </a>
-                    </div>
-                `;
-                articlesGridContainer.appendChild(articleCard);
-            });
-        }
-
-        // Cargar noticias al cargar la página
-        window.onload = async function() {
-            const featuredArticleContainer = document.getElementById('featured-article');
-            const articlesGridContainer = document.getElementById('articles-grid');
-
-            // Mostrar indicador de carga
-            featuredArticleContainer.innerHTML = '<div class="p-6 text-center"><div class="loader mx-auto"></div><p class="mt-4 text-gray-600">Cargando noticias...</p></div>';
-            articlesGridContainer.innerHTML = '';
-
-            try {
-                const noticias = await obtenerNoticias();
-                mostrarNoticias(noticias);
-            } catch (error) {
-                console.error('Error al cargar las noticias:', error);
-                featuredArticleContainer.innerHTML = '<p class="p-6 text-center text-red-500">Error al cargar las noticias. Por favor, intenta recargar la página.</p>';
-            }
-        };
-    </script>
+window.onload = cargarNoticias;
+document.getElementById('reloadBtn').addEventListener('click', cargarNoticias);
+</script>
 </body>
 </html>
