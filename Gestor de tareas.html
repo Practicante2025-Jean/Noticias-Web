@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gestor de Usuarios</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, rgba(131, 164, 212, 0.7), rgba(182, 251, 255, 0.7));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  h2 { text-align: center; padding: 20px; }
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    color: white;
+  }
+  button.register { background: #007bff; }
+  button.register:hover { background: #0056b3; }
+</style>
+</head>
+<body>
+
+<h2>Registro de Usuario</h2>
+
+<input type="text" id="username" placeholder="Nombre">
+<input type="email" id="email" placeholder="Correo">
+<button class="register" onclick="registerUser()">Registrar</button>
+
+<script>
+function registerUser() {
+  const name = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if(!name || !email) { alert('Completa los campos'); return; }
+
+  let users = JSON.parse(localStorage.getItem('users')) || [];
+  let user = users.find(u => u.email === email);
+
+  if(user) {
+    user.registerCount += 1;
+  } else {
+    let role = (name === "admind" && email === "admind") ? "admin" : "user";
+    user = { name, email, registerCount: 1, tasks: [], role: role };
+    users.push(user);
+  }
+
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('currentUser', email);
+  window.location.href = 'tasks.html';
+}
+</script>
+
+</body>
+</html>

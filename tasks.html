@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Kanban</title>
+<style>
+body { font-family: Arial, sans-serif; background: linear-gradient(135deg, rgba(131,164,212,0.7), rgba(182,251,255,0.7)); margin:0;padding:0; display:flex; flex-direction:column; align-items:center;}
+h2 {text-align:center; padding:20px;}
+#kanban { display:flex; justify-content:space-around; margin:20px; gap:20px; width:90%;}
+.column {background: rgba(255,255,255,0.2); backdrop-filter: blur(12px); border-radius:15px; padding:15px; width:30%; min-height:350px; box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+.column h3 {text-align:center; color:#333;}
+.task {background: rgba(255,255,255,0.85); margin:10px 0; padding:12px; border-radius:10px; cursor:grab; box-shadow:0 2px 6px rgba(0,0,0,0.2); transition: transform 0.2s ease;}
+.task:hover { transform: scale(1.02);}
+.buttons {margin-top:10px; display:flex; justify-content:space-between;}
+.done-btn { background: #28a745; color: white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;}
+.done-btn:hover { background:#1e7e34;}
+.delete-btn {background:#dc3545; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;}
+.delete-btn:hover {background:#a71d2a;}
+button.logout {margin:20px 5px; padding:10px 20px; border:none; border-radius:8px; background:#007bff; color:white; font-weight:bold; cursor:pointer;}
+button.logout:hover {background:#0056b3;}
+button.terminate {margin:20px 5px; padding:10px 20px; border:none; border-radius:8px; background:green; color:white; font-weight:bold; cursor:pointer;}
+button.terminate:hover {background:darkgreen;}
+button.adminpanel {margin-left:5px; padding:10px 20px; border:none; border-radius:8px; background:orange; color:white; font-weight:bold; cursor:pointer;}
+button.adminpanel:hover {background:darkorange;}
+.new-task {text-align:center; margin:15px; background: rgba(255,255,255,0.2); padding:15px; border-radius:15px; backdrop-filter: blur(10px); box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.new-task input {padding:8px; margin:5px; border:1px solid #ccc; border-radius:5px;}
+.new-task button {padding:8px 12px; background:#007bff; color:white; border:none; border-radius:5px; cursor:pointer;}
+.new-task button:hover {background:#0056b3;}
+</style>
+</head>
+<body>
+
+<h2>Gestión de Tareas</h2>
+
+<div class="new-task">
+  <input type="text" id="taskTitle" placeholder="Título de la tarea...">
+  <input type="text" id="assignedUser" placeholder="Asignar a usuario...">
+  <input type="date" id="taskDate">
+  <input type="text" id="taskDesc" placeholder="Descripción...">
+  <button onclick="addTask()">Agregar</button>
+  <button class="adminpanel" id="adminBtn" style="display:none;" onclick="goAdmin()">Panel Admin</button>
+</div>
+
+<div id="kanban">
+  <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)"><h3>Pendiente</h3></div>
+  <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)"><h3>En Progreso</h3></div>
+  <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)"><h3>Completado</h3></div>
+</div>
+
+<div id="bottom-buttons">
+  <button class="logout" onclick="logout()">Cerrar sesión</button>
+  <button class="terminate" onclick="saveTasks()">Terminar</button>
+</div>
+
+<script>
+let taskId=1;
+let currentUserEmail = localStorage.getItem('currentUser');
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let currentUser = users.find(u=>u.email===currentUserEmail);
+
+function allowDrop(ev){ev.preventDefault();}
+function drag(ev){ev.dataTransfer.setData("text",ev.target.id);}
+function drop(ev){ev.preventDefault(); if(ev.target.classList.contains("column")) ev.target.appendChild(document.getElementById(ev.dataTransfer.getData("text")));}
+
+function addTask(){
+  const title=document.getElementById("taskTitle").value;
+  const user=document.getElementById("assignedUser").value;
+  const date=document.getElementById("taskDate").value;
+  const desc=document.getElementById("taskDesc").value;
+  if(!title){alert("Escribe un título para la tarea");return;}
+  const task=document.createElement("div");
+  task.className="task";
+  task.id="task"+taskId++;
+  task.draggable=true;
+  task.ondragstart=drag;
+  task.innerHTML=`
+    <h4 id="title-${task.id}">${title}</h4>
+    <p><b>Asignado a:</b> ${user||"No asignado"}</p>
+    <p><b>Fecha:</b> ${date||"Sin fecha"}</p>
+    <p><b>Descripción:</b> ${desc||"Sin descripción"}</p>
+    <div class="buttons">
+      <button class="done-btn" onclick="markDone('${task.id}')">Hecho</button>
+      <button class="delete-btn" onclick="deleteTask('${task.id}')">Eliminar</button>
+    </div>
+  `;
+  document.querySelector(".column").appendChild(task);
+  document.getElementById("taskTitle").value="";
+  document.getElementById("assignedUser").value="";
+  document.getElementById("taskDate").value="";
+  document.getElementById("taskDesc").value="";
+}
+
+function markDone(taskId){document.getElementById("title-"+taskId).style.textDecoration="line-through";}
+function deleteTask(taskId){document.getElementById(taskId).remove();}
+function logout(){localStorage.removeItem('currentUser'); window.location.href='Gestor de Usuarios.html';}
+
+function saveTasks(){
+  let tasksArr=[];
+  document.querySelectorAll(".task").forEach(t=>{
+      const tObj={
+          title:t.querySelector("h4").innerText,
+          assigned: t.querySelector("p").innerText.replace("Asignado a: ",""),
+          date: t.querySelectorAll("p")[1].innerText.replace("Fecha: ",""),
+          desc: t.querySelectorAll("p")[2].innerText.replace("Descripción: ","")
+      };
+      tasksArr.push(tObj);
+  });
+  currentUser.tasks=tasksArr;
+  users=users.map(u=>u.email===currentUser.email?currentUser:u);
+  localStorage.setItem('users',JSON.stringify(users));
+  alert("Tareas guardadas ✅");
+}
+
+function goAdmin(){window.location.href="admind.html";}
+
+// Mostrar botón admin solo si es admin
+if(currentUser && currentUser.role==="admin"){
+  document.getElementById("adminBtn").style.display="inline-block";
+}
+</script>
+
+</body>
+</html>
