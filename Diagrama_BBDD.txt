@@ -1,0 +1,52 @@
+
+CREATE TABLE public.users (
+    user_id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    user_role TEXT NOT NULL DEFAULT 'user',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+
+CREATE TABLE public.task_statuses (
+    status_id SERIAL PRIMARY KEY,
+    status_name TEXT UNIQUE NOT NULL
+);
+
+
+CREATE TABLE public.tasks (
+    task_id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    assigned_date DATE NOT NULL,
+    
+    status_id INT NOT NULL REFERENCES public.task_statuses(status_id) ON DELETE RESTRICT,
+    creator_user_id INT NOT NULL REFERENCES public.users(user_id) ON DELETE RESTRICT
+);
+
+
+CREATE TABLE public.task_assignments (
+    task_id INT NOT NULL REFERENCES public.tasks(task_id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    PRIMARY KEY (task_id, user_id)
+);
+
+
+CREATE VIEW public.user_task_counts AS
+SELECT
+    u.user_id,
+    COUNT(a.task_id) AS registrations_count,
+    COUNT(CASE WHEN t.status_id = s_completed.status_id THEN 1 END) AS completed_tasks_count
+FROM public.users u
+LEFT JOIN public.task_assignments a ON u.user_id = a.user_id
+LEFT JOIN public.tasks t ON a.task_id = t.task_id
+LEFT JOIN public.task_statuses s_completed ON s_completed.status_name = 'Completed'
+GROUP BY u.user_id;
+
+okey que se corrigió en mi documentó Diagrama_BBDD, bueno se corrigió el erro por algunas tablas ya existían y lo traía
+en los campos q se podían generar circunstancia mente, era en tabla de tareas users. Además no estaban permanentemente 
+Ordenadas Correctamente las tablas , lo que provocaba errores al crear relaciones.se elimino lo innecesario q estaba adentro
+del código de mi tabla de bases de datos y se reordenaron las tablas para que las bases de datos funcione bien de manera
+correcta y sin choque entre ellos así como un conflictos

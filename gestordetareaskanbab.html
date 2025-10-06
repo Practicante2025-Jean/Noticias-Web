@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas Kanban Integral</title>
+    <!-- Carga de Tailwind CSS para estilos modernos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos base con fondo degradado */
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2563eb, #3b82f6, #93c5fd);
+            color: #333;
+        }
+        /* Estilo para las tarjetas arrastrables */
+        .task {
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        /* Estilo para simular el arrastre */
+        .task:active {
+            cursor: grabbing;
+        }
+        /* Ocultar las vistas por defecto */
+        .view {
+            display: none;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- MODAL DE MENSAJES (Utilizado en todas las vistas) -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-center">
+            <h4 id="modalTitle" class="text-xl font-bold text-gray-800 mb-3"></h4>
+            <p id="modalMessage" class="text-gray-600 mb-4"></p>
+            <button onclick="closeModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- VISTA 1: REGISTRO / INICIO DE SESIÓN -->
+    <div id="loginView" class="view flex items-center justify-center w-full h-full">
+        <div class="w-full max-w-md bg-white bg-opacity-95 p-8 rounded-2xl shadow-2xl border border-blue-100 backdrop-blur-sm">
+            <h2 class="text-3xl font-extrabold text-gray-800 text-center mb-6">Registro de Usuario</h2>
+            <div class="space-y-4">
+                <input type="text" id="username" placeholder="Nombre"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                <input type="email" id="email" placeholder="Correo"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+            </div>
+            <button class="register w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-[1.01]"
+                    onclick="handleRegister()">
+                Registrar / Iniciar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- VISTA 2: TABLERO KANBAN -->
+    <div id="kanbanView" class="view w-full mx-auto">
+        <h2 class="text-4xl font-extrabold text-white text-center mb-8 mt-4 drop-shadow-lg">Gestión de Tareas (Kanban)</h2>
+
+        <!-- Contenedor para agregar nueva tarea -->
+        <div class="w-full max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-xl mb-8">
+            <h3 class="text-xl font-semibold mb-4 text-gray-700">Crear Nueva Tarea</h3>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                <input type="text" id="taskTitle" placeholder="Título" class="col-span-1 md:col-span-2 px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="assignedUser" placeholder="Asignar a" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <input type="date" id="taskDate" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" id="taskDesc" placeholder="Descripción" class="px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 hidden md:inline-block">
+            </div>
+            <div class="flex flex-wrap gap-4 justify-center mt-6">
+                <button onclick="addTask()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200">
+                    Agregar Tarea
+                </button>
+                <button class="adminpanel bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-200"
+                        id="adminBtn" style="display:none;" onclick="showView('adminView')">
+                    Panel Admin
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor Kanban (Responsivo) -->
+        <div id="kanban" class="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Columna 1: Pendiente -->
+            <div id="col-pendiente" class="column bg-blue-100 p-4 rounded-xl shadow-inner min-h-[400px]" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 class="text-2xl font-bold text-blue-800 border-b-2 border-blue-300 pb-2 mb-4 text-center">Pendiente</h3>
+            </div>
+            <!-- Columna 2: En Progreso -->
+            <div id="col-progreso" class="column bg-yellow-100 p-4 rounded-xl shadow-inner min-h-[400px]" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 class="text-2xl font-bold text-yellow-800 border-b-2 border-yellow-300 pb-2 mb-4 text-center">En Progreso</h3>
+            </div>
+            <!-- Columna 3: Completado -->
+            <div id="col-completado" class="column bg-green-100 p-4 rounded-xl shadow-inner min-h-[400px]" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 class="text-2xl font-bold text-green-800 border-b-2 border-green-300 pb-2 mb-4 text-center">Completado</h3>
+            </div>
+        </div>
+
+        <!-- Botones Inferiores -->
+        <div id="bottom-buttons" class="mt-8 mb-4 flex gap-4 justify-center">
+            <button class="logout bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition duration-200"
+                    onclick="logout()">
+                Cerrar sesión
+            </button>
+            <button class="terminate bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition duration-200"
+                    onclick="saveTasks()">
+                Guardar Tareas
+            </button>
+        </div>
+    </div>
+
+    <!-- VISTA 3: PANEL DE ADMINISTRACIÓN -->
+    <div id="adminView" class="view w-full mx-auto">
+        <div class="max-w-6xl mx-auto mt-8 bg-white p-8 rounded-xl shadow-2xl border border-gray-200">
+            <h1 class="text-4xl font-extrabold text-blue-700 text-center mb-6">Panel de Administración</h1>
+
+            <!-- Botón de retorno -->
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="showView('kanbanView')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200">
+                    ← Volver a Tareas
+                </button>
+                <p id="totalUsuarios" class="text-xl font-semibold text-gray-700"></p>
+            </div>
+
+            <!-- Tabla de usuarios -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden">
+                    <thead class="bg-blue-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Usuario</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Correo</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Veces Registrado</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Tareas</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Filas de usuarios generadas por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Variables Globales ---
+        let taskId = 1;
+        let currentUserEmail = localStorage.getItem('currentUser');
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let currentUser = users.find(u => u.email === currentUserEmail);
+
+        // --- Utilidades del Modal ---
+        function showMessage(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalTitle').style.color = title.includes('Error') ? '#dc2626' : '#1d4ed8';
+            document.getElementById('messageModal').classList.remove('hidden');
+            document.getElementById('messageModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('messageModal').classList.remove('flex');
+            document.getElementById('messageModal').classList.add('hidden');
+        }
+
+        // --- Funciones de Navegación de Vistas ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.style.display = 'none';
+            });
+            document.getElementById(viewId).style.display = 'block';
+
+            // Acciones específicas al cambiar de vista
+            if (viewId === 'kanbanView') {
+                loadTasks();
+                if (currentUser && currentUser.role === "admin") {
+                    document.getElementById("adminBtn").style.display = "inline-block";
+                } else {
+                    document.getElementById("adminBtn").style.display = "none";
+                }
+            } else if (viewId === 'adminView') {
+                // Asegurar que los datos estén actualizados antes de renderizar
+                users = JSON.parse(localStorage.getItem('users')) || [];
+                renderUsers();
+            }
+        }
+
+        // --- Lógica de Registro/Login (View 1) ---
+        function handleRegister() {
+            const name = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            if(!name || !email) { 
+                showMessage('Error de Validación', 'Por favor, completa ambos campos (Nombre y Correo).'); 
+                return; 
+            }
+
+            let user = users.find(u => u.email === email);
+
+            if(user) {
+                // Login: Si el usuario existe, se actualiza el contador
+                user.registerCount += 1;
+                currentUser = user;
+            } else {
+                // Registro: Si es un usuario nuevo, se crea
+                let role = (name === "admind" && email === "admind") ? "admin" : "user";
+                currentUser = { name, email, registerCount: 1, tasks: [], role: role };
+                users.push(currentUser);
+            }
+
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', email);
+            currentUserEmail = email;
+
+            // Redirigir a la vista Kanban
+            showView('kanbanView');
+        }
+
+        function logout() { 
+            localStorage.removeItem('currentUser'); 
+            currentUser = null;
+            showView('loginView');
+        }
+
+
+        // --- Lógica Kanban (View 2) ---
+
+        // Drag and Drop
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev) { 
+            ev.preventDefault(); 
+            const taskId = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(taskId);
+
+            let target = ev.target;
+            while (target && !target.classList.contains("column")) {
+                target = target.parentElement;
+            }
+
+            if (target) {
+                // Actualiza el color de borde de la tarjeta al moverla de columna
+                const status = target.querySelector('h3').textContent;
+                draggedElement.className = draggedElement.className.replace(/border-(blue|yellow|green)-500/g, `border-${status.includes('Pendiente') ? 'blue' : status.includes('Progreso') ? 'yellow' : 'green'}-500`);
+                
+                target.appendChild(draggedElement);
+            }
+        }
+
+        // CRUD Tareas
+        function addTask() {
+            const title = document.getElementById("taskTitle").value;
+            const user = document.getElementById("assignedUser").value;
+            const date = document.getElementById("taskDate").value;
+            const desc = document.getElementById("taskDesc").value;
+
+            if (!title) { showMessage('Error de Título', 'Escribe un título para la tarea.'); return; }
+
+            const pendingColumn = document.getElementById("col-pendiente");
+
+            const task = document.createElement("div");
+            task.className = "task bg-white p-4 rounded-xl shadow-md border-t-4 border-blue-500 my-3";
+            task.id = "task" + taskId++;
+            task.draggable = true;
+            task.ondragstart = drag;
+            
+            const titleClasses = "text-lg font-semibold text-gray-800";
+
+            task.innerHTML = `
+                <h4 id="title-${task.id}" class="${titleClasses}">${title}</h4>
+                <p class="text-sm text-gray-600 mt-1">Asignado a: <span class="font-medium assigned-user">${user || "No asignado"}</span></p>
+                <p class="text-sm text-gray-600">Fecha: <span class="font-medium task-date">${date || "Sin fecha"}</span></p>
+                <p class="text-sm text-gray-600 mt-2 mb-3 task-desc">${desc || "Sin descripción"}</p>
+                <div class="buttons flex gap-2 justify-end">
+                    <button class="done-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-lg transition" onclick="markDone('${task.id}')">Hecho</button>
+                    <button class="delete-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg transition" onclick="deleteTask('${task.id}')">Eliminar</button>
+                </div>
+            `;
+            pendingColumn.appendChild(task);
+            
+            // Limpiar campos
+            document.getElementById("taskTitle").value = "";
+            document.getElementById("assignedUser").value = "";
+            document.getElementById("taskDate").value = "";
+            document.getElementById("taskDesc").value = "";
+
+            // Guardar inmediatamente
+            saveTasks(false);
+        }
+
+        function markDone(taskId) { 
+            const titleElement = document.getElementById("title-" + taskId);
+            titleElement.classList.toggle('line-through'); 
+            titleElement.classList.toggle('text-green-600'); 
+            saveTasks(false);
+        }
+
+        function deleteTask(taskId) { 
+            document.getElementById(taskId).remove(); 
+            saveTasks(false);
+        }
+
+        function saveTasks(showConfirmation = true) {
+            if (!currentUser) return;
+
+            let tasksArr = [];
+            document.querySelectorAll(".task").forEach(t => {
+                // Determinar la columna (estado)
+                let status = t.closest('.column').querySelector('h3').textContent;
+
+                const tObj = {
+                    title: t.querySelector("h4").textContent,
+                    assigned: t.querySelector(".assigned-user").textContent,
+                    date: t.querySelector(".task-date").textContent,
+                    desc: t.querySelector(".task-desc").textContent,
+                    status: status,
+                    isDone: t.querySelector("h4").classList.contains('line-through')
+                };
+                tasksArr.push(tObj);
+            });
+
+            // Actualizar el objeto currentUser con las nuevas tareas
+            currentUser.tasks = tasksArr;
+
+            // Actualizar la lista global de usuarios en localStorage
+            users = users.map(u => u.email === currentUser.email ? currentUser : u);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            if (showConfirmation) {
+                showMessage('Guardado', 'Tareas guardadas correctamente. ✅');
+            }
+        }
+
+        function loadTasks() {
+            // Limpiar columnas existentes
+            document.querySelectorAll(".column").forEach(col => col.innerHTML = col.querySelector('h3').outerHTML);
+
+            if (currentUser && currentUser.tasks) {
+                const columns = {
+                    "Pendiente": document.getElementById("col-pendiente"),
+                    "En Progreso": document.getElementById("col-progreso"),
+                    "Completado": document.getElementById("col-completado")
+                };
+                let currentTaskId = 1;
+                
+                currentUser.tasks.forEach(t => {
+                    let targetColumn = columns[t.status] || columns["Pendiente"]; 
+
+                    const task = document.createElement("div");
+                    const borderClass = t.status === 'Pendiente' ? 'border-blue-500' : t.status === 'En Progreso' ? 'border-yellow-500' : 'border-green-500';
+
+                    task.className = `task bg-white p-4 rounded-xl shadow-md border-t-4 my-3 ${borderClass}`;
+                    task.id = "task" + currentTaskId++;
+                    task.draggable = true;
+                    task.ondragstart = drag;
+                    
+                    const titleClasses = "text-lg font-semibold text-gray-800 " + (t.isDone ? 'line-through text-green-600' : '');
+
+                    task.innerHTML = `
+                        <h4 id="title-${task.id}" class="${titleClasses}">${t.title}</h4>
+                        <p class="text-sm text-gray-600 mt-1">Asignado a: <span class="font-medium assigned-user">${t.assigned}</span></p>
+                        <p class="text-sm text-gray-600">Fecha: <span class="font-medium task-date">${t.date}</span></p>
+                        <p class="text-sm text-gray-600 mt-2 mb-3 task-desc">${t.desc}</p>
+                        <div class="buttons flex gap-2 justify-end">
+                            <button class="done-btn bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1 px-3 rounded-lg transition" onclick="markDone('${task.id}')">Hecho</button>
+                            <button class="delete-btn bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg transition" onclick="deleteTask('${task.id}')">Eliminar</button>
+                        </div>
+                    `;
+                    targetColumn.appendChild(task);
+                });
+                taskId = currentTaskId; 
+            }
+        }
+
+        // --- Lógica de Administración (View 3) ---
+        function renderUsers() {
+            const tbody = document.getElementById("userTable");
+            const totalUsuarios = document.getElementById("totalUsuarios");
+            
+            tbody.innerHTML = "";
+            
+            if (users.length === 0) {
+                 totalUsuarios.textContent = "Usuarios registrados: 0";
+                 return;
+            }
+
+            users.forEach((u, i) => {
+                const rowClass = i % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                
+                let row = `<tr class="${rowClass} hover:bg-blue-50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${u.name} ${u.role === 'admin' ? '<span class="text-xs bg-orange-400 text-white px-2 py-0.5 rounded-full ml-2">ADMIN</span>' : ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${u.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${u.registerCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">${u.tasks ? u.tasks.length : 0}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button class="delete bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg text-xs font-bold transition duration-200" 
+                                onclick="deleteUser(${i})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            totalUsuarios.textContent = "Usuarios registrados: " + users.length;
+        }
+
+        function deleteUser(i) {
+            const userToDelete = users[i];
+            
+            if (userToDelete.email === localStorage.getItem('currentUser')) {
+                showMessage('Error de Borrado', 'No puedes eliminar al usuario de la sesión actual.');
+                return;
+            }
+
+            users.splice(i, 1);
+            localStorage.setItem('users', JSON.stringify(users));
+            // Actualizar la lista local
+            if (currentUserEmail === userToDelete.email) currentUser = null; 
+
+            renderUsers();
+            showMessage('Éxito', `Usuario ${userToDelete.name} eliminado.`);
+        }
+
+        // --- Inicialización ---
+        window.onload = function() {
+            // Verificar si hay un usuario logueado al cargar
+            if (localStorage.getItem('currentUser')) {
+                // Si existe, ir a la vista Kanban
+                showView('kanbanView');
+            } else {
+                // Si no existe, ir a la vista de Login
+                showView('loginView');
+            }
+        };
+    </script>
+
+</body>
+</html>
